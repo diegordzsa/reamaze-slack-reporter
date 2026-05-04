@@ -17,6 +17,8 @@ HEADERS = {"Accept": "application/json"}
 @dataclass
 class ReplyStats:
     reply_count: int
+    received_count: int
+    still_waiting: int
     avg_response_time_minutes: Optional[float]
     replies_with_response_time: int
 
@@ -127,6 +129,25 @@ def collect_reply_stats(target_date_local: datetime, tz) -> ReplyStats:
     ]
     print(f"  -> {len(staff_msgs)} are staff regular messages")
 
+    # Count inbound customer messages (visibility 0, sender NOT in staff)
+    received_count = sum(
+        1 for m in candidates
+        if m.get("visibility") == 0
+        and _msg_sender_email(m) not in staff_emails
+        and _msg_sender_email(m)  # exclude messages with no sender email
+    )
+    print(f"  -> {received_count} inbound customer messages")
+
+    # Build set of conversation slugs that had customer activity yesterday
+    customer_msg_slugs = {
+        _conversation_slug(m) for m in candidates
+        if m.get("visibility") == 0
+        and _msg_sender_email(m) not in staff_emails
+        and _msg_sender_email(m)
+        and _conversation_slug(m)
+    }
+    print(f"  -> across {len(customer_msg_slugs)} unique conversations")
+
     # For each candidate, load its conversation and check it's a reply
     reply_count = 0
     response_times = []  # in seconds
@@ -164,8 +185,28 @@ def collect_reply_stats(target_date_local: datetime, tz) -> ReplyStats:
     else:
         avg_minutes = None
 
+    # Count conversations still awaiting a reply: latest message in thread is from customer.
+    # Fetch any conversation we haven't already loaded.
+    still_waiting = 0
+    for slug in customer_msg_slugs:
+        if slug not in conversation_cache:
+            conversation_cache[slug] = _fetch_conversation_messages(slug)
+        thread = conversation_cache[slug]
+        if not thread:
+            continue
+        # Last regular message (ignore internal notes)
+        regular_msgs = [m for m in thread if m.get("visibility") == 0]
+        if not regular_msgs:
+            continue
+        last = regular_msgs[-1]
+        if _msg_sender_email(last) not in staff_emails and _msg_sender_email(last):
+            still_waiting += 1
+    print(f"  -> {still_waiting} conversations still waiting for a reply")
+
     return ReplyStats(
         reply_count=reply_count,
+        received_count=received_count,
+        still_waiting=still_waiting,
         avg_response_time_minutes=avg_minutes,
         replies_with_response_time=len(response_times),
     )

@@ -18,7 +18,9 @@ def main():
     stats = collect_reply_stats(target, tz)
 
     print("\n--- Would post to Slack ---")
+    print(f"Emails received:    {stats.received_count}")
     print(f"Replies sent:       {stats.reply_count}")
+    print(f"Still waiting:      {stats.still_waiting}")
     print(f"Avg response time:  {_format_response_time(stats.avg_response_time_minutes)}")
     print(f"Timed replies:      {stats.replies_with_response_time}/{stats.reply_count}")
 

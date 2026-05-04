@@ -18,8 +18,9 @@ def _format_response_time(minutes: Optional[float]) -> str:
     return f"{hours / 24:.1f} d"
 
 
-def send_report(report_date: datetime, reply_count: int,
-                avg_minutes: Optional[float], replies_timed: int) -> None:
+def send_report(report_date: datetime, reply_count: int, received_count: int,
+                still_waiting: int, avg_minutes: Optional[float],
+                replies_timed: int) -> None:
     date_str = report_date.strftime("%A, %b %d")
     blocks = [
         {
@@ -29,7 +30,9 @@ def send_report(report_date: datetime, reply_count: int,
         {
             "type": "section",
             "fields": [
+                {"type": "mrkdwn", "text": f"*Emails received:*\n{received_count}"},
                 {"type": "mrkdwn", "text": f"*Replies sent:*\n{reply_count}"},
+                {"type": "mrkdwn", "text": f"*Still waiting:*\n{still_waiting}"},
                 {
                     "type": "mrkdwn",
                     "text": f"*Avg response time:*\n{_format_response_time(avg_minutes)}",

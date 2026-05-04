@@ -20,6 +20,8 @@ def main():
     send_report(
         report_date=target,
         reply_count=stats.reply_count,
+        received_count=stats.received_count,
+        still_waiting=stats.still_waiting,
         avg_minutes=stats.avg_response_time_minutes,
         replies_timed=stats.replies_with_response_time,
     )
