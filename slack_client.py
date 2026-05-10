@@ -19,8 +19,9 @@ def _format_response_time(minutes: Optional[float]) -> str:
 
 
 def send_report(report_date: datetime, reply_count: int, received_count: int,
+                new_conversations: int, conversations_touched: int,
                 still_waiting: int, avg_minutes: Optional[float],
-                replies_timed: int) -> None:
+                replies_timed: int, notification_count: int = 0) -> None:
     date_str = report_date.strftime("%A, %b %d")
     blocks = [
         {
@@ -30,8 +31,10 @@ def send_report(report_date: datetime, reply_count: int, received_count: int,
         {
             "type": "section",
             "fields": [
-                {"type": "mrkdwn", "text": f"*Emails received:*\n{received_count}"},
-                {"type": "mrkdwn", "text": f"*Replies sent:*\n{reply_count}"},
+                {"type": "mrkdwn", "text": f"*Customer emails received:*\n{received_count}"},
+                {"type": "mrkdwn", "text": f"*Staff replies sent:*\n{reply_count}"},
+                {"type": "mrkdwn", "text": f"*New conversations:*\n{new_conversations}"},
+                {"type": "mrkdwn", "text": f"*Conversations touched:*\n{conversations_touched}"},
                 {"type": "mrkdwn", "text": f"*Still waiting:*\n{still_waiting}"},
                 {
                     "type": "mrkdwn",
@@ -40,12 +43,17 @@ def send_report(report_date: datetime, reply_count: int, received_count: int,
             ],
         },
     ]
+    context_parts = []
     if replies_timed != reply_count and reply_count > 0:
+        context_parts.append(f"Response time based on {replies_timed}/{reply_count} replies")
+    if notification_count > 0:
+        context_parts.append(f"{notification_count} automated notifications excluded")
+    if context_parts:
         blocks.append({
             "type": "context",
             "elements": [{
                 "type": "mrkdwn",
-                "text": f"_Response time based on {replies_timed}/{reply_count} replies_",
+                "text": f"_{' | '.join(context_parts)}_",
             }],
         })
 

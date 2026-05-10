@@ -21,11 +21,14 @@ def main():
         report_date=target,
         reply_count=stats.reply_count,
         received_count=stats.received_count,
+        new_conversations=stats.new_conversations,
+        conversations_touched=stats.conversations_touched,
         still_waiting=stats.still_waiting,
         avg_minutes=stats.avg_response_time_minutes,
         replies_timed=stats.replies_with_response_time,
+        notification_count=stats.notification_count,
     )
-    print("Posted to Slack ✅")
+    print("Posted to Slack")
 
 
 if __name__ == "__main__":
